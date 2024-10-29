@@ -1,8 +1,15 @@
 // importing libraries
 const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
 
 // creating server application
 const app = express();
+app.use(cors());
+
+// setting up morgan
+morgan.token('content', (req, res) => JSON.stringify(req.body));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'));
 
 // using middlewares
 app.use(express.json());
@@ -13,7 +20,7 @@ let tasks = [
   {
     "id": "1",
     "task": "Finish reading the book",
-    "completed": false
+    "completed": true
   },
   {
     "id": "2",
@@ -48,11 +55,10 @@ app.get('/api/tasks', (request, response) => {
 app.get('/api/tasks/:id', (request, response) => {
   const id = request.params.id;
   const task = tasks.find(task => task.id === id);
-  console.log(task);
   if (task) {
     response.json(task);
   } else {
-    response.status(404).json({error: `Task with ID '${id}' not found!`});
+    response.status(404).json({message: `Task with ID '${id}' not found!`});
   }
 });
 
@@ -72,7 +78,7 @@ app.post('/api/tasks', (request, response) => {
     const dubCheck = tasks.find(t => t.task === task.task);
 
     if (dubCheck) {
-      response.status(409).json({error: "Task already exist!"});
+      response.status(409).json({message: "Task already exist!"});
     
     } else {
 
@@ -82,7 +88,7 @@ app.post('/api/tasks', (request, response) => {
     }
   
   } else {
-    response.status(400).json({error: "Bad request!"});
+    response.status(400).json({message: "Bad request!"});
   }
 });
 
@@ -98,7 +104,7 @@ app.put('/api/tasks/:id', (request, response) => {
     dubCheck = {
       id: dubCheck.id,
       task: request.body.task || dubCheck.task,
-      completed: request.body.completed || dubCheck.completed
+      completed: (request.body.completed == undefined) ? dubCheck.completed : request.body.completed
     };
 
     tasks = tasks.map(task => {
@@ -110,7 +116,7 @@ app.put('/api/tasks/:id', (request, response) => {
     response.json(dubCheck);
     
   } else {
-    response.status(404).json({error: `Task with ID '${id}' not found!`});
+    response.status(404).json({message: `Task with ID '${id}' not found!`});
   }
 });
 
@@ -127,7 +133,7 @@ app.delete('/api/tasks/:id', (request, response) => {
     response.json({sucess: `Task with ID '${id}' sucessfully deleted!`});
     
   } else {
-    response.status(404).json({error: `Task with ID '${id}' not found!`});
+    response.status(404).json({message: `Task with ID '${id}' not found!`});
   }
 })
 
